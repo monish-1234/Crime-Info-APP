@@ -116,7 +116,6 @@ class _IndexPageState extends State<IndexPage> {
   Widget getCard(item) {
     var fullName = item['Face_Name'];
     var lastseen = item['Last_Seen'];
-    var area = item['Last_Area'];
     var lastseenloc = item['Last_Seen_Location'];
 
     return Card(
