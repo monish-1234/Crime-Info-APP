@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-import 'package:sample_user_listing/themes/color.dart';
+import '../themes/color.dart';
 
 class IndexPage extends StatefulWidget {
   @override

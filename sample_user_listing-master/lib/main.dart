@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:sample_user_listing/pages/index.dart';
-import 'package:sample_user_listing/themes/color.dart';
+import 'pages/index.dart';
+import 'themes/color.dart';
 
 // Entry point to start the app
 void main() => runApp(MyApp());
