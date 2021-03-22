@@ -2,23 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:convert';
 
 import 'package:http/http.dart' as http;
-
-void main() {
-  runApp(MyApp());
-}
-
-class MyApp extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Flutter Demo',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-      ),
-      home: IndexPage(),
-    );
-  }
-}
+import '../themes/color.dart';
 
 class IndexPage extends StatefulWidget {
   @override
@@ -26,12 +10,12 @@ class IndexPage extends StatefulWidget {
 }
 
 class _IndexPageState extends State<IndexPage> {
-  final areas = <String>['Anna Nagar', 'West Mambalam', 'area3'];
   final scaffoldKey = GlobalKey<ScaffoldState>();
 
-  int selectedAreaIndex = 0;
-  List users = [];
   bool isLoading = false;
+  int selectedAreaIndex = 0;
+  List<String> areas = [];
+  List criminals = [];
 
   @override
   void initState() {
@@ -43,17 +27,26 @@ class _IndexPageState extends State<IndexPage> {
     setState(() => isLoading = true);
     final url =
         "https://fvg2hhnsz0.execute-api.us-west-2.amazonaws.com/test/criminals";
-    final response = await http.get(Uri.parse(url));
-
-    if (response.statusCode == 200) {
-      final items = json.decode(response.body);
+    try {
+      final criminals = await _makeGetRequest<List>(url);
+      // fetches all the last areas from list
+      // converts it to set to make them unique
+      // then convert them to list again
+      final areas =
+          criminals.map<String>((e) => e['Last_Area']).toSet().toList();
       setState(() {
-        users = items;
+        this.criminals = criminals;
+        this.areas = areas..insert(0, 'All');
         isLoading = false;
       });
-    } else {
-      users = [];
-      isLoading = false;
+    } catch (e, st) {
+      print('Error while fetching criminals');
+      print(st);
+      setState(() {
+        criminals = [];
+        areas = [];
+        isLoading = false;
+      });
     }
   }
 
@@ -84,12 +77,13 @@ class _IndexPageState extends State<IndexPage> {
       appBar: AppBar(
         title: Text("Latest Criminal Sighting"),
         actions: [
-          TextButton.icon(
-            style: TextButton.styleFrom(primary: Colors.white),
-            icon: Icon(Icons.location_on_outlined),
-            label: Text(areas[selectedAreaIndex ?? 0]),
-            onPressed: showAreaSelection,
-          ),
+          if (areas.isNotEmpty)
+            TextButton.icon(
+              style: TextButton.styleFrom(primary: Colors.white),
+              icon: Icon(Icons.location_on_outlined),
+              label: Text(areas[selectedAreaIndex ?? 0]),
+              onPressed: showAreaSelection,
+            ),
         ],
       ),
       body: RefreshIndicator(
@@ -100,17 +94,24 @@ class _IndexPageState extends State<IndexPage> {
   }
 
   Widget getBody() {
-    if (users.contains(null) || users.length < 0 || isLoading) {
+    if (criminals.length < 0 || isLoading) {
       return Center(
         child: CircularProgressIndicator(
-          valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
+          valueColor: const AlwaysStoppedAnimation<Color>(primary),
         ),
       );
     }
+
+    final filtered = areas[selectedAreaIndex] == 'All'
+        ? criminals
+        : criminals
+            .where(
+                (element) => element['Last_Area'] == areas[selectedAreaIndex])
+            .toList();
     return ListView.builder(
-      itemCount: users.length,
+      itemCount: filtered.length,
       itemBuilder: (context, index) {
-        return getCard(users[index]);
+        return getCard(filtered[index]);
       },
     );
   }
@@ -153,5 +154,19 @@ class _IndexPageState extends State<IndexPage> {
         ),
       ),
     );
+  }
+}
+
+/// Makes a http GET request and returns it in type [T]
+Future<T> _makeGetRequest<T>(String url) async {
+  // throws error if url is null only in development build
+  assert(url != null);
+  // makes a http resuest with the given url
+  final response = await http.get(Uri.parse(url));
+  if (response.statusCode == 200) {
+    return jsonDecode(response.body) as T;
+  } else {
+    // todo: throw a meaningful exception
+    throw Exception('Status code != 200');
   }
 }
