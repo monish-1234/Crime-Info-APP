@@ -59,9 +59,6 @@ class _IndexPageState extends State<IndexPage> {
             title: Text(areas[index]),
             onTap: () {
               setState(() => selectedAreaIndex = index);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('Showing results from ${areas[index]}')),
-              );
               Navigator.of(context).pop();
             },
           );
@@ -137,18 +134,12 @@ class _IndexPageState extends State<IndexPage> {
               height: 10,
             ),
             Text(
-              area,
-              style: TextStyle(color: Colors.cyan),
-            ),
-            Text(
               lastseen.toString(),
               style: TextStyle(color: Colors.black),
             ),
             Text(
               lastseenloc,
-              style: TextStyle(
-                color: Colors.black,
-              ),
+              style: TextStyle(color: Colors.cyan),
             )
           ],
         ),
